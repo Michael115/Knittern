@@ -1,0 +1,12 @@
+@font-face {
+  font-family: "Rokkitt";
+  src: url("Rokkitt-VariableFont_wght.ttf");
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Oranienbaum";
+  src: url("Oranienbaum-Regular.ttf");
+  font-weight: 500;
+  font-style: normal;
+}
