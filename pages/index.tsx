@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Image from "next/image";
 import { NavBar } from "../components/navbar";
+import { PatternCanvas } from "../components/patternCanvas";
 
 export default function Home() {
   return (
@@ -12,12 +13,7 @@ export default function Home() {
       <NavBar />
 
       <div className="flex flex-col relative items-center justify-center w-full flex-1 px-20 text-center">
-        <h1
-          style={{ fontFamily: "Oranienbaum" }}
-          className="text-4xl font-bold"
-        ></h1>
-
-        Knittern
+      <PatternCanvas width={800} height={800} scale={1}/>
     
       </div>
 
