@@ -1,64 +1,164 @@
-import { useEffect, useRef } from "react";
-import { Canvas, Point } from "../interfaces/interfaces";
+import React, { useEffect, useRef } from "react";
+import { Canvas, Color, Pattern, Point, Stitch } from "../interfaces/interfaces";
 
 
-const drawLine = (ctx: CanvasRenderingContext2D, ptStart: Point, ptEnd: Point) => {
-
-  ctx.beginPath();
-  ctx.moveTo(ptEnd.x, ptEnd.y);
-  ctx.lineTo(ptStart.x, ptStart.y);
-  ctx.strokeStyle = `rgb(${0}, ${0}, ${0})`;
-  ctx.lineWidth = 1;
-  ctx.lineCap = "square";
-  ctx.stroke();
-  ctx.closePath();
+const floor = (floor: number, nearest: number) =>{
+    return Math.floor(floor/nearest)*nearest;
 }
+
+const freshStitches = (width: number, height: number, rowSize: number, colSize: number) => 
+    new Array<Stitch>(width/rowSize)
+      .fill({color: 'nodraw'})
+      .map(() => 
+        new Array<Stitch>(height/colSize)
+          .fill({color: 'nodraw'}));
 
 export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
 
-    const gridSpacing = width/30;
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const mouseDownRef = useRef(false);
+  const rowSize = 20;
+  const colSize = 20;
 
-    
-    // Init Canvas
-    useEffect(() => {
-      if (canvasRef.current) {
-        const context = canvasRef.current.getContext("2d")!;
-        context.scale(scale, scale);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseDownRef = useRef(false);
+  const currentColor = useRef<string>('blue');
 
-      
-        console.log("Draw once")
-       const ctx =canvasRef.current.getContext("2d");
+  const colors = new Map<string, Color>([
+    ["black", {r: 0, g: 0, b: 0}],
+    ["blue", {r: 0, g: 0, b: 255}],
+    ["red", {r: 255, g: 0, b: 0}],
+    ["green", {r: 0, g: 255, b: 0}],
+  ]);
 
-       ctx.clearRect(0, 0, ctx.canvas.width / scale, ctx.canvas.height / scale);
+  const pattern = useRef<Pattern>({ stitches: freshStitches(width, height, rowSize, colSize)});
 
-       for (let index = 0; index <= (width/gridSpacing); index++) {
-        
-         drawLine(ctx, {x: index*gridSpacing, y: 0}, {x: index*gridSpacing, y: height});
-         drawLine(ctx, {x: 0, y: index*gridSpacing}, {x: width, y: index*gridSpacing});
-       }
-
-      }
-    }, [scale, height, width]);
-    
-   
-    const mouseDown = (e: React.MouseEvent) => { 
-      mouseDownRef.current = true;
-      if (canvasRef.current) {
-        console.log({ x: e.clientX, y: e.clientY });
-      }
-    };
-
-    return (
-      <div className={"flex flex-col bg-white divide-y relative"}>
-        <canvas
-          onMouseDown={mouseDown}
-          className={"cursor-crosshair z-0"}
-          ref={canvasRef}
-          width={width * scale}
-          height={height * scale}
-        ></canvas>
-      </div>
-    );
+  const pointToGrid = (pt: Point, rowSize: number, colSize: number) : Point => {
+    return { x: floor(pt.x, rowSize)/rowSize, y: floor(pt.y, colSize)/colSize }
   }
+  
+  const drawLine = (ctx: CanvasRenderingContext2D, ptStart: Point, ptEnd: Point, bold: boolean) => {
+  
+    ctx.beginPath();
+    ctx.moveTo(ptEnd.x, ptEnd.y);
+    ctx.lineTo(ptStart.x, ptStart.y);
+    ctx.strokeStyle = `rgb(${0}, ${0}, ${0})`;
+  
+    if(bold) {
+      ctx.lineWidth = 2.4;
+    } else {
+      ctx.lineWidth = 1;
+    }
+  
+    ctx.lineCap = "square";
+    ctx.stroke();
+    ctx.closePath();
+  }
+  
+  const drawPattern = (ctx: CanvasRenderingContext2D, pattern: Pattern) => {
+  
+    for (let y = 0; y < pattern.stitches.length; y++) {
+  
+      const row = pattern.stitches[y];
+  
+      for (let x = 0; x < row.length; x++) {
+        
+        const stitch = row[x];
+        
+        var pt = {x: x*rowSize, y: y*colSize};
+  
+        fillGridRectangle(ctx, pt, stitch.color)
+      }
+    }
+  }
+
+  const fillGridRectangle = (ctx: CanvasRenderingContext2D, pt: Point, colorType: string) => {
+    
+    if(colorType !== 'nodraw') {
+      var colorLookup = colors.get(colorType);
+      ctx.fillStyle = `rgba(${colorLookup.r},${colorLookup.g},${colorLookup.b},1)`;
+      ctx.fillRect(floor(pt.x, rowSize), floor(pt.y, colSize), rowSize, colSize);
+    }
+  }
+  
+
+  const adjustPointSpace = (pt: Point): Point => {
+    var rect = canvasRef.current!.getBoundingClientRect();
+    return { x: pt.x - rect.left, y: pt.y - rect.top };
+  };
+
+  // Init Canvas
+  useEffect(() => {
+    if (canvasRef.current) {
+      const context = canvasRef.current.getContext("2d")!;
+      context.scale(scale, scale);
+ 
+      console.log("Draw once")
+      const ctx =canvasRef.current.getContext("2d");
+      
+      // Draw grid lines
+      ctx.clearRect(0, 0, ctx.canvas.width / scale, ctx.canvas.height / scale);
+  
+      for (let index = 0; index <= (width/colSize); index++) {    
+        drawLine(ctx, {x: index*colSize, y: 0}, {x: index*colSize, y: height}, index % 10 == 0);
+      }
+    
+      for (let index = 0; index <= (height/rowSize); index++) {    
+       drawLine(ctx, {x: 0, y: index*rowSize}, {x: width, y: index*rowSize}, index % 10 == 0);
+     }
+
+     drawPattern(ctx, pattern.current);
+  
+    }
+  }, [scale, height, width]);
+  
+  
+  const mouseDraw = (ctx: CanvasRenderingContext2D, pt: Point) => {
+    
+    var adjust = adjustPointSpace(pt);
+    
+    var gridPosition = pointToGrid(adjust, rowSize, colSize);
+
+    pattern.current.stitches[gridPosition.y][gridPosition.x] = { color: currentColor.current};
+
+    console.log(pattern)
+    drawPattern(ctx, pattern.current);
+  }
+
+  const mouseMove = (e: React.MouseEvent) => {
+    if (canvasRef.current && mouseDownRef.current) {
+      const ctx = canvasRef.current.getContext("2d")!;
+      mouseDraw(ctx, {x: e.clientX, y: e.clientY});  
+    }
+  }
+
+  const mouseDown = (e: React.MouseEvent) => { 
+    mouseDownRef.current = true;
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d")!;
+      mouseDraw(ctx, {x: e.clientX, y: e.clientY});  
+    }
+  };
+
+  const mouseLeave = (e : React.MouseEvent) => {
+    mouseDownRef.current = false;
+  }
+ 
+  return (
+    <div className={"flex flex-row gap-x-8"}>
+      <canvas
+        onMouseDown={mouseDown}
+        onMouseMove={mouseMove}
+        onMouseUp={mouseLeave}
+        onMouseLeave={mouseLeave}
+        className={"cursor-crosshair z-0"}
+        ref={canvasRef}
+        width={width * scale}
+        height={height * scale}
+      ></canvas>
+      <div className={"flex flex-col gap-y-10"}>
+        <button className="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => currentColor.current = 'red'}>Red</button>
+        <button className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => currentColor.current = 'green'}>Green</button>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => currentColor.current = 'blue'}>Blue</button>
+      </div>
+    </div>
+  );
+}
