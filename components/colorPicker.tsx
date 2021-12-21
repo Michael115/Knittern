@@ -213,7 +213,14 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
 
   return (
     <div className={"flex flex-col"}>
-      <div className="flex flex-col ">
+      <div className="flex flex-row ">
+        <canvas
+          className={`flex cursor-pointer`}
+          onClick={() => onClick(chosenColor.current)}
+          ref={chosenColorCanvasRef}
+          width={width}
+          height={55}
+        ></canvas>
         <button
           onClick={() => {
             setOpen(!open);
@@ -221,26 +228,19 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
               onClick(chosenColor.current);
             }
           }}
-          className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded"
+          className="bg-gray-500 hover:bg-gray-700 text-white text-sm font-bold py-1 px-2 rounded  w-14"
         >
-          {!open ? "Edit Colour" : "Close"}
+          {!open ? "Edit" : "Close"}
         </button>
-        <canvas
-          className={`flex cursor-pointer`}
-          onClick={() => onClick(chosenColor.current)}
-          ref={chosenColorCanvasRef}
-          width={width}
-          height={80}
-        ></canvas>
       </div>
       {open && (
-        <div className={"flex flex-col"}>
+        <div className={" flex-col"}>
           <canvas
             onMouseDown={mouseDown}
             onMouseMove={mouseMove}
             onMouseUp={mouseLeave}
             onMouseLeave={mouseLeave}
-            className={"flex cursor-crosshair"}
+            className={"cursor-crosshair"}
             ref={canvasRef}
             width={width}
             height={height}
@@ -251,7 +251,7 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
             onMouseMove={mouseMoveColorBar}
             onMouseUp={mouseLeaveBar}
             onMouseLeave={mouseLeaveBar}
-            className={"flex cursor-crosshair"}
+            className={"cursor-crosshair"}
             ref={colorBarCanvasRef}
             width={width}
             height={30}
