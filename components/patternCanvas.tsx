@@ -28,14 +28,9 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseDownRef = useRef(false);
-  const currentColor = useRef<string>("blue");
+  const currentColor = useRef<string>("nodraw");
 
-  const colors = new Map<string, Color>([
-    ["black", { r: 0, g: 0, b: 0 }],
-    ["blue", { r: 0, g: 0, b: 255 }],
-    ["red", { r: 255, g: 0, b: 0 }],
-    ["green", { r: 0, g: 255, b: 0 }],
-  ]);
+  const colors = new Map<string, string>([]);
 
   const pattern = useRef<Pattern>({
     stitches: freshStitches(width, height, rowSize, colSize),
@@ -111,7 +106,7 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
   ) => {
     if (colorType !== "nodraw") {
       var colorLookup = colors.get(colorType);
-      ctx.fillStyle = `rgba(${colorLookup.r},${colorLookup.g},${colorLookup.b},1)`;
+      ctx.fillStyle = colorLookup;
       ctx.fillRect(
         floor(pt.x, rowSize),
         floor(pt.y, colSize),
@@ -205,7 +200,55 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
           Clear
         </button>
 
-        <ColorPicker width={300} height={300}></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => {
+            console.log(color);
+            colors.set("0", color);
+            currentColor.current = "0";
+          }}
+        ></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => {
+            colors.set("1", color);
+            currentColor.current = "1";
+          }}
+        ></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => {
+            colors.set("2", color);
+            currentColor.current = "2";
+          }}
+        ></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => {
+            colors.set("3", color);
+            currentColor.current = "3";
+          }}
+        ></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => {
+            colors.set("4", color);
+            currentColor.current = "4";
+          }}
+        ></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => {
+            colors.set("5", color);
+            currentColor.current = "5";
+          }}
+        ></ColorPicker>
       </div>
     </div>
   );

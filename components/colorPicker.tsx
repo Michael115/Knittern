@@ -1,8 +1,11 @@
-import React, { useEffect, useRef } from "react";
-import { Canvas, Point } from "../interfaces/interfaces";
-import { Portal } from "./portal";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ColorPickerParams, Point } from "../interfaces/interfaces";
 
-export const ColorPicker: React.FC<Canvas> = ({ width, height }) => {
+export const ColorPicker: React.FC<ColorPickerParams> = ({
+  width,
+  height,
+  onClick,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chosenColorCanvasRef = useRef<HTMLCanvasElement>(null);
   const colorBarCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,8 +16,19 @@ export const ColorPicker: React.FC<Canvas> = ({ width, height }) => {
   const colorbarColor = useRef<string>("rgba(255,0,0,1)");
   const chosenColor = useRef<string>("rgba(0,0,0,1)");
 
-  const chosenColorPosition = useRef<Point>({ x: 100, y: 100 });
+  const chosenColorPosition = useRef<Point>({ x: 150, y: 50 });
   const colorbarPosition = useRef<Point>({ x: 50, y: 0 });
+
+  const [open, setOpen] = useState<boolean>(false);
+
+  const close = useCallback(
+    (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      if (event.target === event.currentTarget) {
+        setOpen(false);
+      }
+    },
+    []
+  );
 
   const adjustPointSpace = (canvas: HTMLCanvasElement, pt: Point): Point => {
     var rect = canvas!.getBoundingClientRect();
@@ -167,7 +181,7 @@ export const ColorPicker: React.FC<Canvas> = ({ width, height }) => {
 
     var pt = adjustPointSpace(colorBarCanvasRef.current, {
       x: e.clientX,
-      y: 15,
+      y: e.clientY,
     });
     colorbarPosition.current = pt;
 
@@ -189,43 +203,56 @@ export const ColorPicker: React.FC<Canvas> = ({ width, height }) => {
   };
 
   useEffect(() => {
+    setColorBar();
+    setChosenColor();
+
     draw();
     drawColorBar();
     drawChosenColor();
   });
 
   return (
-    <Portal>
-      <div className={"flex flex-col"}>
+    <div className={"flex flex-col"}>
+      <div className="flex flex-col ">
+        <button
+          onClick={() => setOpen(!open)}
+          className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded"
+        >
+          {!open ? "Edit Colour" : "Close"}
+        </button>
         <canvas
-          className={"flex cursor-crosshair"}
+          className={`flex cursor-pointer`}
+          onClick={() => onClick(chosenColor.current)}
           ref={chosenColorCanvasRef}
           width={width}
           height={80}
         ></canvas>
-
-        <canvas
-          onMouseDown={mouseDown}
-          onMouseMove={mouseMove}
-          onMouseUp={mouseLeave}
-          onMouseLeave={mouseLeave}
-          className={"flex cursor-crosshair"}
-          ref={canvasRef}
-          width={width}
-          height={height}
-        ></canvas>
-
-        <canvas
-          onMouseDown={mouseDownColorBar}
-          onMouseMove={mouseMoveColorBar}
-          onMouseUp={mouseLeaveBar}
-          onMouseLeave={mouseLeaveBar}
-          className={"flex cursor-crosshair"}
-          ref={colorBarCanvasRef}
-          width={width}
-          height={30}
-        ></canvas>
       </div>
-    </Portal>
+      {open && (
+        <div className={"flex flex-col"}>
+          <canvas
+            onMouseDown={mouseDown}
+            onMouseMove={mouseMove}
+            onMouseUp={mouseLeave}
+            onMouseLeave={mouseLeave}
+            className={"flex cursor-crosshair"}
+            ref={canvasRef}
+            width={width}
+            height={height}
+          ></canvas>
+
+          <canvas
+            onMouseDown={mouseDownColorBar}
+            onMouseMove={mouseMoveColorBar}
+            onMouseUp={mouseLeaveBar}
+            onMouseLeave={mouseLeaveBar}
+            className={"flex cursor-crosshair"}
+            ref={colorBarCanvasRef}
+            width={width}
+            height={30}
+          ></canvas>
+        </div>
+      )}
+    </div>
   );
 };

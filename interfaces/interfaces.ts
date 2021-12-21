@@ -3,6 +3,12 @@ export interface Canvas {
     height: number,
 }
 
+export interface ColorPickerParams {
+    width: number,
+    height: number,
+    onClick: (color: string) => void
+}
+
 export interface Point {
     x: number,
     y: number
