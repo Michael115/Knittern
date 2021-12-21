@@ -219,7 +219,7 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
           height={height}
         ></canvas>
       </div>
-      <div className={"flex flex-col gap-y-10 print:hidden"}>
+      <div className={"flex flex-col gap-y-4 print:hidden"}>
         {/* <button
           className="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={() => (currentColor.current = "nodraw")}
@@ -256,6 +256,16 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
           width={200}
           height={200}
           onClick={(color) => colorPickerClick(color, "5")}
+        ></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => colorPickerClick(color, "6")}
+        ></ColorPicker>
+        <ColorPicker
+          width={200}
+          height={200}
+          onClick={(color) => colorPickerClick(color, "7")}
         ></ColorPicker>
       </div>
     </div>
