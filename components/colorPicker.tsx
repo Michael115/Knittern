@@ -215,7 +215,12 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
     <div className={"flex flex-col"}>
       <div className="flex flex-col ">
         <button
-          onClick={() => setOpen(!open)}
+          onClick={() => {
+            setOpen(!open);
+            if (open) {
+              onClick(chosenColor.current);
+            }
+          }}
           className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded"
         >
           {!open ? "Edit Colour" : "Close"}

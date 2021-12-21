@@ -180,18 +180,28 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
     mouseDownRef.current = false;
   };
 
+  const colorPickerClick = (color: string, colorName: string) => {
+    colors.set(colorName, color);
+    currentColor.current = colorName;
+
+    const ctx = canvasRef.current.getContext("2d")!;
+    drawPattern(ctx, pattern.current);
+  };
+
   return (
     <div className={"flex flex-row gap-x-8"}>
-      <canvas
-        onMouseDown={mouseDown}
-        onMouseMove={mouseMove}
-        onMouseUp={mouseLeave}
-        onMouseLeave={mouseLeave}
-        className={"cursor-crosshair"}
-        ref={canvasRef}
-        width={width}
-        height={height}
-      ></canvas>
+      <div>
+        <canvas
+          onMouseDown={mouseDown}
+          onMouseMove={mouseMove}
+          onMouseUp={mouseLeave}
+          onMouseLeave={mouseLeave}
+          className={"cursor-crosshair"}
+          ref={canvasRef}
+          width={width}
+          height={height}
+        ></canvas>
+      </div>
       <div className={"flex flex-col gap-y-10"}>
         <button
           className="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -203,51 +213,32 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
         <ColorPicker
           width={200}
           height={200}
-          onClick={(color) => {
-            console.log(color);
-            colors.set("0", color);
-            currentColor.current = "0";
-          }}
+          onClick={(color) => colorPickerClick(color, "0")}
         ></ColorPicker>
         <ColorPicker
           width={200}
           height={200}
-          onClick={(color) => {
-            colors.set("1", color);
-            currentColor.current = "1";
-          }}
+          onClick={(color) => colorPickerClick(color, "1")}
         ></ColorPicker>
         <ColorPicker
           width={200}
           height={200}
-          onClick={(color) => {
-            colors.set("2", color);
-            currentColor.current = "2";
-          }}
+          onClick={(color) => colorPickerClick(color, "2")}
         ></ColorPicker>
         <ColorPicker
           width={200}
           height={200}
-          onClick={(color) => {
-            colors.set("3", color);
-            currentColor.current = "3";
-          }}
+          onClick={(color) => colorPickerClick(color, "3")}
         ></ColorPicker>
         <ColorPicker
           width={200}
           height={200}
-          onClick={(color) => {
-            colors.set("4", color);
-            currentColor.current = "4";
-          }}
+          onClick={(color) => colorPickerClick(color, "4")}
         ></ColorPicker>
         <ColorPicker
           width={200}
           height={200}
-          onClick={(color) => {
-            colors.set("5", color);
-            currentColor.current = "5";
-          }}
+          onClick={(color) => colorPickerClick(color, "5")}
         ></ColorPicker>
       </div>
     </div>
