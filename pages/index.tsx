@@ -13,8 +13,8 @@ export default function Home() {
       <NavBar />
 
       <div className="flex flex-col relative items-center justify-center w-full flex-1 px-20 text-center">
-      <PatternCanvas width={1000} height={1000} scale={1}/>
-    
+      <PatternCanvas width={1000} height={1000}/>
+     
       </div>
 
       <footer className="flex items-center justify-center w-full">

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Canvas, Color, Pattern, Point, Stitch } from "../interfaces/interfaces";
+import { ColorPicker } from "./colorPicker";
 
 
 const floor = (floor: number, nearest: number) =>{
@@ -13,7 +14,7 @@ const freshStitches = (width: number, height: number, rowSize: number, colSize: 
         new Array<Stitch>(height/colSize)
           .fill({color: 'nodraw'}));
 
-export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
+export const PatternCanvas: React.FC<Canvas> = ({width, height}) => {
 
   const rowSize = 20;
   const colSize = 20;
@@ -55,6 +56,8 @@ export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
   
   const drawPattern = (ctx: CanvasRenderingContext2D, pattern: Pattern) => {
   
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  
     for (let y = 0; y < pattern.stitches.length; y++) {
   
       const row = pattern.stitches[y];
@@ -68,6 +71,14 @@ export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
         fillGridRectangle(ctx, pt, stitch.color)
       }
     }
+
+    for (let index = 0; index <= (width/colSize); index++) {    
+      drawLine(ctx, {x: index*colSize, y: 0}, {x: index*colSize, y: height}, index % 10 == 0);
+    }
+  
+    for (let index = 0; index <= (height/rowSize); index++) {    
+     drawLine(ctx, {x: 0, y: index*rowSize}, {x: width, y: index*rowSize}, index % 10 == 0);
+   }
   }
 
   const fillGridRectangle = (ctx: CanvasRenderingContext2D, pt: Point, colorType: string) => {
@@ -79,7 +90,6 @@ export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
     }
   }
   
-
   const adjustPointSpace = (pt: Point): Point => {
     var rect = canvasRef.current!.getBoundingClientRect();
     return { x: pt.x - rect.left, y: pt.y - rect.top };
@@ -89,14 +99,10 @@ export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
   useEffect(() => {
     if (canvasRef.current) {
       const context = canvasRef.current.getContext("2d")!;
-      context.scale(scale, scale);
+      //context.scale(scale, scale);
  
-      console.log("Draw once")
-      const ctx =canvasRef.current.getContext("2d");
+      const ctx = canvasRef.current.getContext("2d");
       
-      // Draw grid lines
-      ctx.clearRect(0, 0, ctx.canvas.width / scale, ctx.canvas.height / scale);
-  
       for (let index = 0; index <= (width/colSize); index++) {    
         drawLine(ctx, {x: index*colSize, y: 0}, {x: index*colSize, y: height}, index % 10 == 0);
       }
@@ -106,20 +112,15 @@ export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
      }
 
      drawPattern(ctx, pattern.current);
-  
     }
-  }, [scale, height, width]);
-  
+  });
   
   const mouseDraw = (ctx: CanvasRenderingContext2D, pt: Point) => {
     
     var adjust = adjustPointSpace(pt);
-    
     var gridPosition = pointToGrid(adjust, rowSize, colSize);
-
     pattern.current.stitches[gridPosition.y][gridPosition.x] = { color: currentColor.current};
 
-    console.log(pattern)
     drawPattern(ctx, pattern.current);
   }
 
@@ -149,15 +150,15 @@ export const PatternCanvas: React.FC<Canvas> = ({width, height, scale}) => {
         onMouseMove={mouseMove}
         onMouseUp={mouseLeave}
         onMouseLeave={mouseLeave}
-        className={"cursor-crosshair z-0"}
+        className={"cursor-crosshair"}
         ref={canvasRef}
-        width={width * scale}
-        height={height * scale}
+        width={width}
+        height={height}
       ></canvas>
       <div className={"flex flex-col gap-y-10"}>
-        <button className="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => currentColor.current = 'red'}>Red</button>
-        <button className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => currentColor.current = 'green'}>Green</button>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => currentColor.current = 'blue'}>Blue</button>
+        <button className="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => currentColor.current = 'nodraw'}>Clear</button>
+        
+        <ColorPicker width={300} height={300}></ColorPicker>   
       </div>
     </div>
   );

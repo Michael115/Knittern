@@ -1,7 +1,6 @@
 export interface Canvas {
     width: number,
     height: number,
-    scale: number
 }
 
 export interface Point {
@@ -22,3 +21,4 @@ export interface Stitch  {
 export interface Pattern {
     stitches: Stitch[][]
 }
+
