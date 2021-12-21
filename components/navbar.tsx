@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function NavBar() {
   return (
-    <div className="flex relative w-full h-16">
+    <div className="flex relative w-full h-16 print:hidden">
       <div
         style={{ fontFamily: "Rokkitt" }}
         className="flex px-4 p-1 absolute inset-x-0 top-0 bg-blue items-center justify-start text-gray-text text-4xl"

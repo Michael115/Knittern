@@ -188,8 +188,25 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
     drawPattern(ctx, pattern.current);
   };
 
+  function download() {
+    var canvas = document.getElementById("canvas");
+    var url = canvasRef.current.toDataURL("image/png");
+    var link = document.createElement("a");
+    link.download = "filename.png";
+    link.href = url;
+    link.click();
+  }
+
   return (
-    <div className={"flex flex-row gap-x-8"}>
+    <div className={"flex flex-row gap-x-4"}>
+      <div>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => download()}
+        >
+          Download
+        </button>
+      </div>
       <div>
         <canvas
           onMouseDown={mouseDown}
@@ -202,13 +219,13 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
           height={height}
         ></canvas>
       </div>
-      <div className={"flex flex-col gap-y-10"}>
-        <button
+      <div className={"flex flex-col gap-y-10 print:hidden"}>
+        {/* <button
           className="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={() => (currentColor.current = "nodraw")}
         >
           Clear
-        </button>
+        </button> */}
 
         <ColorPicker
           width={200}

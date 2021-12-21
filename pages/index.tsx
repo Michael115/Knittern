@@ -16,7 +16,7 @@ export default function Home() {
         <PatternCanvas width={1000} height={1000} />
       </div>
 
-      <footer className="flex items-center justify-center w-full">
+      <footer className="flex items-center justify-center w-full print:hidden">
         &copy; Michael Gillon {new Date().getFullYear()}
       </footer>
     </div>
