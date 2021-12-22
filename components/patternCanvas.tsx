@@ -8,6 +8,7 @@ import {
   Stitch,
 } from "../interfaces/interfaces";
 import { ColorPicker } from "./colorPicker";
+import Image from "next/image";
 
 const NODRAW = "n";
 const floor = (floor: number, nearest: number) => {
@@ -272,16 +273,22 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
   return (
     <div className={"flex flex-row gap-x-4"}>
       <div className="flex flex-col gap-y-4">
-        <div>
+        <div className="flex flex-col items-center justify-center text-center">
           <div
             style={{ fontFamily: "Rokkitt" }}
             className="flex px-4 bg-blue items-center justify-center text-gray-text text-4xl"
           >
             Knittern
           </div>
-          <div className="flex items-center justify-center text-center">
-            <a href="https://github.com/Michael115/Knittern">Github</a>
-          </div>
+          by Michael Gillon
+          <a
+            className="pt-6"
+            href="https://github.com/Michael115/Knittern"
+            target="_blank"
+            rel="noreferrer"
+          >
+            View on Github
+          </a>
         </div>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
