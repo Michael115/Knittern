@@ -73,7 +73,7 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
     ctx.beginPath();
     ctx.moveTo(ptEnd.x, ptEnd.y);
     ctx.lineTo(ptStart.x, ptStart.y);
-    ctx.strokeStyle = `rgb(${0}, ${0}, ${0})`;
+    ctx.strokeStyle = `rgb(${60}, ${60}, ${60})`;
 
     if (index % 30 == 0) {
       ctx.lineWidth = 2.5;
