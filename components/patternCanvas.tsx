@@ -272,11 +272,16 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
   return (
     <div className={"flex flex-row gap-x-4"}>
       <div className="flex flex-col gap-y-4">
-        <div
-          style={{ fontFamily: "Rokkitt" }}
-          className="flex px-4 p-1 bg-blue items-center justify-start text-gray-text text-4xl"
-        >
-          Knittern
+        <div>
+          <div
+            style={{ fontFamily: "Rokkitt" }}
+            className="flex px-4 bg-blue items-center justify-center text-gray-text text-4xl"
+          >
+            Knittern
+          </div>
+          <div className="flex items-center justify-center text-center">
+            <a href="https://github.com/Michael115/Knittern">Github</a>
+          </div>
         </div>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
