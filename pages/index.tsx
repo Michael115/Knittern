@@ -5,15 +5,14 @@ import { PatternCanvas } from "../components/patternCanvas";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex flex-col justify-between min-h-screen">
       <Head>
         <title>Knittern</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <NavBar />
 
-      <div className="flex flex-col relative items-center justify-center w-full flex-1 px-20 text-center">
-        <PatternCanvas width={1000} height={1000} />
+      <div className="flex flex-col flex-1 p-4 items-center">
+        <PatternCanvas width={1080} height={1080} />
       </div>
 
       <footer className="flex items-center justify-center w-full print:hidden">

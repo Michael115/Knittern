@@ -3,10 +3,23 @@ export interface Canvas {
     height: number,
 }
 
+export interface ColorPickerPosition {
+    bar: Point,
+    color: Point
+}
+
+export interface ChosenColor {
+    colorRgb: string,
+    locked: boolean,
+    colorCoord: ColorPickerPosition 
+}
+
 export interface ColorPickerParams {
     width: number,
     height: number,
-    onClick: (color: string) => void
+    initialColorPosition: ColorPickerPosition,
+    initialColorRgb: string,
+    onClick: (color: string, colorCoord: ColorPickerPosition) => void,
 }
 
 export interface Point {
@@ -21,10 +34,12 @@ export interface Color {
 }
 
 export interface Stitch  {
-    color: string
+    c: string
 }
 
 export interface Pattern {
+    name: string,
+    colors: { [key: string]: ChosenColor; },
     stitches: Stitch[][]
 }
 

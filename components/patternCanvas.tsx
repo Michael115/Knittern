@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Canvas,
+  ChosenColor,
   Color,
   Pattern,
   Point,
@@ -8,6 +9,7 @@ import {
 } from "../interfaces/interfaces";
 import { ColorPicker } from "./colorPicker";
 
+const NODRAW = "n";
 const floor = (floor: number, nearest: number) => {
   return Math.floor(floor / nearest) * nearest;
 };
@@ -19,22 +21,39 @@ const freshStitches = (
   colSize: number
 ) =>
   new Array<Stitch>(width / rowSize)
-    .fill({ color: "nodraw" })
-    .map(() => new Array<Stitch>(height / colSize).fill({ color: "nodraw" }));
+    .fill({ c: NODRAW })
+    .map(() => new Array<Stitch>(height / colSize).fill({ c: NODRAW }));
 
 export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
-  const rowSize = 20;
-  const colSize = 20;
+  const rowSize = 18;
+  const colSize = 18;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseDownRef = useRef(false);
-  const currentColor = useRef<string>("nodraw");
+  const currentColorType = useRef<string>(NODRAW);
 
-  const colors = new Map<string, string>([]);
-
-  const pattern = useRef<Pattern>({
+  const [pattern, setPattern] = useState<Pattern>({
+    name: null,
+    colors: Object.fromEntries(
+      new Map<string, ChosenColor>(
+        Array.from(Array(13).keys()).map((i) => [
+          i.toString(),
+          {
+            colorRgb: "rgba(0,0,0,1)",
+            locked: false,
+            colorCoord: { color: { x: 120, y: 50 }, bar: { x: 100, y: 0 } },
+          },
+        ])
+      )
+    ),
     stitches: freshStitches(width, height, rowSize, colSize),
   });
+
+  const [saved, setSaved] = useState<Pattern[]>([]);
+
+  useEffect(() => {
+    setSaved(getSaved());
+  }, []);
 
   const pointToGrid = (pt: Point, rowSize: number, colSize: number): Point => {
     return {
@@ -47,15 +66,17 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
     ctx: CanvasRenderingContext2D,
     ptStart: Point,
     ptEnd: Point,
-    bold: boolean
+    index: number
   ) => {
     ctx.beginPath();
     ctx.moveTo(ptEnd.x, ptEnd.y);
     ctx.lineTo(ptStart.x, ptStart.y);
     ctx.strokeStyle = `rgb(${0}, ${0}, ${0})`;
 
-    if (bold) {
-      ctx.lineWidth = 2.4;
+    if (index % 30 == 0) {
+      ctx.lineWidth = 2.5;
+    } else if (index % 10 == 0) {
+      ctx.lineWidth = 2;
     } else {
       ctx.lineWidth = 1;
     }
@@ -76,7 +97,7 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
 
         var pt = { x: x * rowSize, y: y * colSize };
 
-        fillGridRectangle(ctx, pt, stitch.color);
+        fillGridRectangle(ctx, pt, stitch.c);
       }
     }
 
@@ -85,7 +106,7 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
         ctx,
         { x: index * colSize, y: 0 },
         { x: index * colSize, y: height },
-        index % 10 == 0
+        index
       );
     }
 
@@ -94,7 +115,7 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
         ctx,
         { x: 0, y: index * rowSize },
         { x: width, y: index * rowSize },
-        index % 10 == 0
+        index
       );
     }
   };
@@ -104,9 +125,10 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
     pt: Point,
     colorType: string
   ) => {
-    if (colorType !== "nodraw") {
-      var colorLookup = colors.get(colorType);
-      ctx.fillStyle = colorLookup;
+    if (colorType !== NODRAW) {
+      var colorLookup = pattern.colors[colorType];
+
+      ctx.fillStyle = colorLookup.colorRgb;
       ctx.fillRect(
         floor(pt.x, rowSize),
         floor(pt.y, colSize),
@@ -134,7 +156,7 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
           ctx,
           { x: index * colSize, y: 0 },
           { x: index * colSize, y: height },
-          index % 10 == 0
+          index
         );
       }
 
@@ -143,22 +165,23 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
           ctx,
           { x: 0, y: index * rowSize },
           { x: width, y: index * rowSize },
-          index % 10 == 0
+          index
         );
       }
 
-      drawPattern(ctx, pattern.current);
+      drawPattern(ctx, pattern);
     }
   });
 
   const mouseDraw = (ctx: CanvasRenderingContext2D, pt: Point) => {
     var adjust = adjustPointSpace(pt);
     var gridPosition = pointToGrid(adjust, rowSize, colSize);
-    pattern.current.stitches[gridPosition.y][gridPosition.x] = {
-      color: currentColor.current,
+
+    pattern.stitches[gridPosition.y][gridPosition.x] = {
+      c: currentColorType.current,
     };
 
-    drawPattern(ctx, pattern.current);
+    drawPattern(ctx, pattern);
   };
 
   const mouseMove = (e: React.MouseEvent) => {
@@ -180,38 +203,102 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
     mouseDownRef.current = false;
   };
 
-  const colorPickerClick = (color: string, colorName: string) => {
-    colors.set(colorName, color);
-    currentColor.current = colorName;
+  const colorPickerClick = (color: ChosenColor, colorName: string) => {
+    pattern.colors[colorName] = color;
+
+    currentColorType.current = colorName;
 
     const ctx = canvasRef.current.getContext("2d")!;
-    drawPattern(ctx, pattern.current);
+    drawPattern(ctx, pattern);
   };
 
-  function download() {
-    var canvas = document.getElementById("canvas");
+  const load = (name: string) => {
+    var newPattern = saved.filter((n) => name == name)[0];
+    setPattern(newPattern);
+
+    const ctx = canvasRef.current.getContext("2d")!;
+    drawPattern(ctx, pattern);
+  };
+
+  const save = () => {
+    pattern.name = "pattern-" + String(saved.length).padStart(4, "0");
+
+    localStorage.setItem(pattern.name, JSON.stringify(pattern));
+
+    setSaved(getSaved());
+  };
+
+  const deletePattern = (name: string) => {
+    localStorage.removeItem(name);
+    setSaved(getSaved());
+  };
+
+  const getSaved = () => {
+    if (typeof window !== "undefined") {
+      const keys = Object.keys(localStorage);
+      const i = keys.length;
+
+      var patterns = Object.keys(localStorage)
+        .filter((f) => f.startsWith("pattern"))
+        .map((m) => JSON.parse(localStorage.getItem(m)) as Pattern);
+
+      return patterns.sort((a, b) =>
+        a.name > b.name ? -1 : b.name > a.name ? 1 : 0
+      );
+    }
+    return [];
+  };
+
+  const download = () => {
     var url = canvasRef.current.toDataURL("image/png");
     var link = document.createElement("a");
-    link.download = "filename.png";
+    link.download = `pattern-${new Date().toISOString()}.png`;
     link.href = url;
     link.click();
-  }
+  };
 
   return (
     <div className={"flex flex-row gap-x-4"}>
       <div className="flex flex-col gap-y-4">
+        <div
+          style={{ fontFamily: "Rokkitt" }}
+          className="flex px-4 p-1 bg-blue items-center justify-start text-gray-text text-4xl"
+        >
+          Knittern
+        </div>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => download()}
+          onClick={download}
         >
           Download
         </button>
         <button
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => (currentColor.current = "nodraw")}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={save}
         >
-          Clear
+          Save
         </button>
+
+        <div className="flex flex-col items-center gap-y-2">
+          {saved.map((x) => (
+            <div className="flex flex-row" key={x.name}>
+              <button
+                onClick={() => load(x.name)}
+                className={
+                  "flex bg-gray-300 hover:bg-gray-500 font-bold rounded p-2"
+                }
+              >
+                {x.name}
+              </button>
+              <button
+                onClick={() => deletePattern(x.name)}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold px-1 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
       <div>
         <canvas
@@ -225,35 +312,27 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
           height={height}
         ></canvas>
       </div>
+
       <div className={"flex flex-col gap-y-2 print:hidden"}>
-        {/* <button
-          className="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => (currentColor.current = "nodraw")}
+        <button
+          className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => (currentColorType.current = NODRAW)}
         >
-          Clear
-        </button> */}
-        {[
-          "0",
-          "1",
-          "2",
-          "3",
-          "4",
-          "5",
-          "6",
-          "7",
-          "8",
-          "9",
-          "10",
-          "11",
-          "12",
-          "13",
-          "14",
-        ].map((i) => (
+          Eraser
+        </button>
+        {Array.from(Array(13).keys()).map((i) => (
           <ColorPicker
+            initialColorPosition={pattern.colors[i.toString()].colorCoord}
+            initialColorRgb={pattern.colors[i.toString()].colorRgb}
             key={i}
             width={200}
             height={200}
-            onClick={(color) => colorPickerClick(color, i)}
+            onClick={(color, colorCoord) =>
+              colorPickerClick(
+                { colorRgb: color, locked: false, colorCoord },
+                i.toString()
+              )
+            }
           ></ColorPicker>
         ))}
       </div>
