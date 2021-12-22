@@ -10,6 +10,7 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
   height,
   initialColorPosition,
   initialColorRgb,
+  forceloaded,
   onClick,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,11 +20,25 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
   const mouseDownRef = useRef(false);
   const mouseColorBarDownRef = useRef(false);
 
-  const chosenColor = useRef<string>(initialColorRgb);
+  const [chosenColor, setChosenColor] = useState<string>(initialColorRgb);
+  const [colorPosition, setColorPosition] =
+    useState<ColorPickerPosition>(initialColorPosition);
 
-  const colorPosition = useRef<ColorPickerPosition>(initialColorPosition);
+  const [colorByPicker, setColorByPicker] = useState<boolean>(false);
+
+  const [force, setForce] = useState<number>(0);
 
   const [open, setOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!colorByPicker || force != forceloaded) {
+      setChosenColor(initialColorRgb);
+      setColorPosition(initialColorPosition);
+      setForce(forceloaded);
+    }
+
+    drawAll();
+  });
 
   const close = useCallback(
     (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -69,13 +84,7 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
       ctx.beginPath();
       ctx.strokeStyle = "white";
       ctx.lineWidth = 1.5;
-      ctx.arc(
-        colorPosition.current.color.x,
-        colorPosition.current.color.y,
-        10,
-        0,
-        2 * Math.PI
-      );
+      ctx.arc(colorPosition.color.x, colorPosition.color.y, 10, 0, 2 * Math.PI);
       ctx.stroke();
     }
   };
@@ -99,13 +108,7 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
       ctx.beginPath();
-      ctx.arc(
-        colorPosition.current.bar.x,
-        ctx.canvas.height / 2,
-        10,
-        0,
-        2 * Math.PI
-      );
+      ctx.arc(colorPosition.bar.x, ctx.canvas.height / 2, 10, 0, 2 * Math.PI);
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = "#000";
       ctx.stroke();
@@ -126,24 +129,23 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
       const pixel = ctx.getImageData(pt.x, pt.y, 1, 1)["data"];
       const rgba = `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, 1)`;
 
+      setChosenColor(rgba);
       return rgba;
     }
   };
 
   const getCirclePositionColor = () => {
     if (canvasRef.current) {
-      console.log("it gets here?");
       const ctx = canvasRef.current.getContext("2d");
 
-      const pt = colorPosition.current.color;
+      const pt = colorPosition.color;
       const pixel = ctx.getImageData(pt.x, pt.y, 1, 1)["data"];
       const rgba = `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, 1)`;
 
       return rgba;
     }
-    console.log("it gets here? 2", chosenColor.current);
 
-    return chosenColor.current;
+    return chosenColor;
   };
 
   const getColorBar = () => {
@@ -151,7 +153,7 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
       console.log("Set color bar", colorPosition);
       const colorBarCtx = colorBarCanvasRef.current.getContext("2d");
 
-      const pt = colorPosition.current.bar;
+      const pt = colorPosition.bar;
 
       const pixel = colorBarCtx.getImageData(pt.x, pt.y, 1, 1)["data"];
       const rgba = `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, 1)`;
@@ -166,8 +168,9 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
       x: e.clientX,
       y: e.clientY,
     });
-    colorPosition.current.color = pt;
+    colorPosition.color = pt;
 
+    setColorByPicker(true);
     drawAll();
   };
 
@@ -177,7 +180,8 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
         x: e.clientX,
         y: e.clientY,
       });
-      colorPosition.current.color = pt;
+      colorPosition.color = pt;
+
       drawAll();
     }
   };
@@ -192,12 +196,13 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
 
   const mouseDownColorBar = (e: React.MouseEvent) => {
     mouseColorBarDownRef.current = true;
+    setColorByPicker(true);
 
     var pt = adjustPointSpace(colorBarCanvasRef.current, {
       x: e.clientX,
       y: e.clientY,
     });
-    colorPosition.current.bar = pt;
+    colorPosition.bar = pt;
 
     drawAll();
   };
@@ -208,7 +213,7 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
         x: e.clientX,
         y: e.clientY,
       });
-      colorPosition.current.bar = pt;
+      colorPosition.bar = pt;
 
       drawAll();
     }
@@ -217,7 +222,7 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
   const handleClickOutside = (event: any) => {
     if (divRef.current && !divRef.current.contains(event.target)) {
       document.removeEventListener("mousedown", handleClickOutside);
-      onClick(getChosenColor(), colorPosition.current);
+      onClick(getChosenColor(), colorPosition);
       setOpen(false);
     }
   };
@@ -225,27 +230,23 @@ export const ColorPicker: React.FC<ColorPickerParams> = ({
   const openPicker = (e: React.MouseEvent) => {
     setOpen(!open);
 
+    setColorByPicker(true);
+
     if (!open) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
-      onClick(getChosenColor(), colorPosition.current);
+      onClick(getChosenColor(), colorPosition);
       setOpen(false);
     }
   };
-
-  useEffect(() => {
-    colorPosition.current = initialColorPosition;
-    chosenColor.current = initialColorRgb;
-    drawAll();
-  });
 
   return (
     <div ref={divRef} className={"flex flex-col"}>
       <div className="flex flex-row ">
         <canvas
           className={`flex cursor-pointer`}
-          onClick={() => onClick(getChosenColor(), colorPosition.current)}
+          onClick={() => onClick(getChosenColor(), colorPosition)}
           ref={chosenColorCanvasRef}
           width={width}
           height={55}

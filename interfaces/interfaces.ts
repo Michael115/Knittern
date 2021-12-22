@@ -19,6 +19,7 @@ export interface ColorPickerParams {
     height: number,
     initialColorPosition: ColorPickerPosition,
     initialColorRgb: string,
+    forceloaded: number,
     onClick: (color: string, colorCoord: ColorPickerPosition) => void,
 }
 

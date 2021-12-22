@@ -32,6 +32,8 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
   const mouseDownRef = useRef(false);
   const currentColorType = useRef<string>(NODRAW);
 
+  const [force, setForce] = useState<number>(0);
+
   const [pattern, setPattern] = useState<Pattern>({
     name: null,
     colors: Object.fromEntries(
@@ -213,15 +215,25 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
   };
 
   const load = (name: string) => {
-    var newPattern = saved.filter((n) => name == name)[0];
+    setSaved(getSaved());
+
+    var newPattern = saved.filter((n) => name == n.name)[0];
     setPattern(newPattern);
 
     const ctx = canvasRef.current.getContext("2d")!;
     drawPattern(ctx, pattern);
+
+    setForce((x) => x + 1);
   };
 
   const save = () => {
-    pattern.name = "pattern-" + String(saved.length).padStart(4, "0");
+    if (saved.length > 0) {
+      const sortedBiggestName = saved[0].name;
+      const num = parseInt(sortedBiggestName.slice(8, 12));
+      pattern.name = "pattern-" + String(num + 1).padStart(4, "0");
+    } else {
+      pattern.name = "pattern-" + String(0).padStart(4, "0");
+    }
 
     localStorage.setItem(pattern.name, JSON.stringify(pattern));
 
@@ -320,8 +332,9 @@ export const PatternCanvas: React.FC<Canvas> = ({ width, height }) => {
         >
           Eraser
         </button>
-        {Array.from(Array(13).keys()).map((i) => (
+        {Object.keys(pattern.colors).map((color, i) => (
           <ColorPicker
+            forceloaded={force}
             initialColorPosition={pattern.colors[i.toString()].colorCoord}
             initialColorRgb={pattern.colors[i.toString()].colorRgb}
             key={i}
